@@ -7,27 +7,31 @@ def show_menu():
     print("2. Add Project")
     print("3. Remove Project")
     print("4. Exit")
+    print("")
 
-# Create the list once, so projects remain while the app runs.
+
+def show_projects(project_list):
+    """Display projects as a numbered list, or a message if there are none."""
+    if not project_list:
+        print("No projects to display.")
+    else:
+        print("Projects:")
+        # enumerate gives each entry a number beginning at 1.
+        for index, project in enumerate(project_list, start=1):
+            print(f"{index}. {project}")
+
+
+# Keep project data outside the menu loop so it survives menu selections.
 projects = []
 
-# The main loop repeats until option 4 triggers break.
+# Repeat the main menu until the user selects Exit.
 while True:
-    # Call the function each time the menu needs to appear.
     show_menu()
-
-    # input() returns text, even if the user types a number.
     choice = input("Select an option: ")
 
-    # Choice 1: Report when there are no projects to show.
-    if choice == "1" and not projects:
-        print("No projects to display.")
-    # Choice 1: Otherwise, display each saved project.
-    elif choice == "1" and projects:
-        print("Projects:")
-        for project in projects:
-            print(f"- {project}")
-    # Choice 2: Ask for project names and add each unique, non-empty name.
+    if choice == "1":
+        # Pass the projects list as an argument to our display function.
+        show_projects(projects)
     elif choice == "2":
         while True:
             name = input("Project name (type 'quit' to cancel): ").strip()
@@ -42,7 +46,10 @@ while True:
 
                 projects.append(name)
                 print(f"Project added: {name}")
-    # Choice 3: List projects by number and remove one only after confirmation.
+                # Ask whether the user wants to add another project.
+                add_another = input("Would you like to enter another project? (yes/no): ").strip().lower()
+                if add_another != "yes":
+                    break
     elif choice == "3":
         if not projects:
             print("No projects to remove.")
@@ -68,10 +75,8 @@ while True:
                         print(f"Project removed: {project}")
                     else:
                         print("Project was not removed.")
-    # Choice 4: End the program.
     elif choice == "4":
         print("Goodbye!")
         break
-    # Any other input: Report that the menu choice is invalid.
     else:
         print("Invalid option.")
