@@ -1,14 +1,15 @@
 # BuildTrack: A Python project management application.
 
-# Create the project list once so names survive menu repetitions.
+# Create this list once so projects persist while the program runs.
 projects = []
 
-# Repeat the main menu until the user chooses Exit.
+# The main menu repeats until option 4 executes break.
 while True:
     print("=== BuildTrack ===")
     print("1. View Projects")
     print("2. Add Project")
-    print("3. Exit")
+    print("3. Remove Project")
+    print("4. Exit")
 
     choice = input("Select an option: ")
 
@@ -19,23 +20,49 @@ while True:
         for project in projects:
             print(f"- {project}")
     elif choice == "2":
-        # The inner loop accepts multiple project names until 'quit'.
         while True:
-            # Remove leading and trailing spaces before validating.
             name = input("Project name (type 'quit' to cancel): ").strip()
             if name == "quit":
-                break  # Return to the outer menu loop.
+                break
             elif not name:
                 print("Project name cannot be empty.")
             else:
-                # Reject exact duplicates before appending.
                 if name in projects:
                     print("Project already exists.")
-                    continue  # Ask for another name without adding this one.
+                    continue
 
                 projects.append(name)
                 print(f"Project added: {name}")
     elif choice == "3":
+        if not projects:
+            print("No projects to remove.")
+        else:
+            print("Projects:")
+            # enumerate(..., start=1) numbers each project for the user.
+            for index, project in enumerate(projects, start=1):
+                print(f"{index}. {project}")
+
+            selection = input("Enter the number of the project to remove: ").strip()
+            # isdigit() rejects letters and blank input before int() is called.
+            if not selection.isdigit():
+                print("Please enter a valid project number.")
+            else:
+                # List indexes start at 0, but menu numbering starts at 1.
+                project_index = int(selection) - 1
+                if not 0 <= project_index < len(projects):
+                    print("Please enter a valid project number.")
+                else:
+                    project = projects[project_index]
+                    confirmation = input(
+                        f"Are you sure you want to remove '{project}'? (yes/no): "
+                    ).strip().lower()
+                    if confirmation == "yes":
+                        # pop(index) deletes the selected item from the list.
+                        projects.pop(project_index)
+                        print(f"Project removed: {project}")
+                    else:
+                        print("Project was not removed.")
+    elif choice == "4":
         print("Goodbye!")
         break
     else:
