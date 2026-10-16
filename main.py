@@ -19,16 +19,20 @@ while True:
         for project in projects:
             print(f"- {project}")
     elif choice == "2":
-        # Keep accepting projects until the user types 'quit'.
+        # The inner loop accepts multiple project names until 'quit'.
         while True:
-            # strip() removes whitespace around the entered name.
+            # Remove leading and trailing spaces before validating.
             name = input("Project name (type 'quit' to cancel): ").strip()
             if name == "quit":
-                break  # Return to the main menu.
+                break  # Return to the outer menu loop.
             elif not name:
-                # An empty string is false, so it must not be saved.
                 print("Project name cannot be empty.")
             else:
+                # Reject exact duplicates before appending.
+                if name in projects:
+                    print("Project already exists.")
+                    continue  # Ask for another name without adding this one.
+
                 projects.append(name)
                 print(f"Project added: {name}")
     elif choice == "3":
