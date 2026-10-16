@@ -1,9 +1,9 @@
 # BuildTrack: A Python project management application.
 
-# Create the project list once, before the repeating menu begins.
+# Create the project list once so names survive menu repetitions.
 projects = []
 
-# Keep showing the main menu until option 3 uses break to exit.
+# Repeat the main menu until the user chooses Exit.
 while True:
     print("=== BuildTrack ===")
     print("1. View Projects")
@@ -12,24 +12,27 @@ while True:
 
     choice = input("Select an option: ")
 
-    # An empty list is False in a condition; a non-empty list is True.
     if choice == "1" and not projects:
         print("No projects to display.")
     elif choice == "1" and projects:
         print("Projects:")
-        # Visit each project in the list and display its name.
         for project in projects:
             print(f"- {project}")
     elif choice == "2":
-        # This inner loop allows multiple additions in one menu visit.
+        # Keep accepting projects until the user types 'quit'.
         while True:
-            name = input("Project name (type 'quit' to cancel): ")
+            # strip() removes whitespace around the entered name.
+            name = input("Project name (type 'quit' to cancel): ").strip()
             if name == "quit":
-                break  # Leave the inner loop and return to the main menu.
-            projects.append(name)
-            print(f"Project added: {name}")
+                break  # Return to the main menu.
+            elif not name:
+                # An empty string is false, so it must not be saved.
+                print("Project name cannot be empty.")
+            else:
+                projects.append(name)
+                print(f"Project added: {name}")
     elif choice == "3":
         print("Goodbye!")
-        break  # Leave the main menu loop and end the program.
+        break
     else:
         print("Invalid option.")
