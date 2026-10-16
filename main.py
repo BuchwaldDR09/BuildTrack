@@ -1,5 +1,8 @@
 # BuildTrack: A Python project management application.
 
+import json
+from pathlib import Path
+
 
 def show_menu():
     """Display the main menu options."""
@@ -21,10 +24,19 @@ def show_projects(project_list):
     if not project_list:
         print("No projects to display.")
     else:
-        # Calculate the total with a helper function and display it.
         print(f"Projects: ({count_projects(project_list)} total)")
         for index, project in enumerate(project_list, start=1):
             print(f"{index}. {project}")
+
+
+def save_projects(project_list, filename="projects.json"):
+    """Save the project list as JSON beside this Python file."""
+    # __file__ points to main.py, independently of the working directory.
+    file_path = Path(__file__).resolve().parent / filename
+
+    # 'w' creates or replaces the file; indent=4 makes JSON readable.
+    with open(file_path, "w", encoding="utf-8") as project_file:
+        json.dump(project_list, project_file, indent=4)
 
 
 def add_projects(project_list):
@@ -41,6 +53,7 @@ def add_projects(project_list):
                 continue
 
             project_list.append(name)
+            save_projects(project_list)  # Save immediately after a change.
             print(f"Project added: {name}")
             add_another = input("Would you like to enter another project? (yes/no): ").strip().lower()
             if add_another != "yes":
@@ -70,15 +83,16 @@ def remove_projects(project_list):
                 ).strip().lower()
                 if confirmation == "yes":
                     project_list.pop(project_index)
+                    save_projects(project_list)  # Persist the deletion.
                     print(f"Project removed: {project}")
                 else:
                     print("Project was not removed.")
 
 
-# The list is created once so project names remain during the program run.
+# Projects are only in memory for now; Lesson 8C will load the JSON file.
 projects = []
 
-# Repeat the menu until the user selects Exit.
+# True is always true, so this loop repeats until break is reached.
 while True:
     show_menu()
     choice = input("Select an option: ")
@@ -90,6 +104,7 @@ while True:
     elif choice == "3":
         remove_projects(projects)
     elif choice == "4":
+        save_projects(projects)
         print("Goodbye!")
         break
     else:
