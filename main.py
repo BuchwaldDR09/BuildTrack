@@ -50,7 +50,8 @@ def add_projects(project_list):
         elif not name:
             print("Project name cannot be empty.")
         else:
-            if name in project_list:
+            # Compare folded text so capitalization alone cannot create a duplicate.
+            if any(existing.casefold() == name.casefold() for existing in project_list):
                 print("Project already exists.")
                 continue
 
@@ -65,7 +66,7 @@ def add_projects(project_list):
 
 
 def rename_project(project_list):
-    """Rename a numbered project after confirmation."""
+    """Rename a numbered project, retrying invalid names or allowing cancellation."""
     if not project_list:
         print("No projects to rename.")
     else:
@@ -83,24 +84,36 @@ def rename_project(project_list):
                 print("Please enter a valid project number.")
             else:
                 old_name = project_list[project_index]
-                new_name = input(f"Enter the new name for '{old_name}': ").strip()
-                if not new_name:
-                    print("Project name cannot be empty.")
-                elif new_name in project_list:
-                    print("Project already exists.")
-                else:
+                while True:
+                    new_name = input(
+                        f"Enter the new name for '{old_name}' (type 'quit' to cancel): "
+                    ).strip()
+                    if new_name.lower() == "quit":
+                        print("Project was not renamed.")
+                        break
+                    if not new_name:
+                        print("Project name cannot be empty.")
+                        continue
+                    # Skip the selected project; changing only capitalization is allowed.
+                    if any(
+                        index != project_index and existing.casefold() == new_name.casefold()
+                        for index, existing in enumerate(project_list)
+                    ):
+                        print("Project already exists.")
+                        continue
+
                     confirmation = input(
                         f"Are you sure you want to rename '{old_name}' to '{new_name}'? (yes/no): "
                     ).strip().lower()
                     if confirmation == "yes":
-                        # Direct index assignment replaces the name without changing list length.
+                        # Assignment updates the name without changing the list's length.
                         project_list[project_index] = new_name
-                        # The renamed entry may belong somewhere else alphabetically.
                         project_list.sort(key=str.casefold)
-                        save_projects(project_list)  # Persist the renamed project immediately.
+                        save_projects(project_list)  # Save the new name and alphabetical order.
                         print(f"Project renamed: {old_name} -> {new_name}")
                     else:
                         print("Project was not renamed.")
+                    break
 
 
 def remove_projects(project_list):
