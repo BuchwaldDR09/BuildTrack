@@ -10,7 +10,8 @@ def show_menu():
     print("1. View Projects")
     print("2. Add Project")
     print("3. Remove Project")
-    print("4. Exit")
+    print("4. Search Projects")
+    print("5. Exit")
     print("")
 
 
@@ -103,6 +104,17 @@ def load_projects(filename="projects.json"):
         return []
 
 
+def search_projects(project_list, search_term):
+    """Return project names containing a case-insensitive partial match."""
+    # Ignore surrounding spaces and compare using a common case.
+    search_term = search_term.strip().lower()
+    if not search_term:
+        return []
+
+    # A list comprehension creates a new list; original projects are unchanged.
+    return [project for project in project_list if search_term in project.lower()]
+
+
 # Restore saved projects on startup instead of always creating an empty list.
 projects = load_projects()
 
@@ -118,6 +130,14 @@ while True:
     elif choice == "3":
         remove_projects(projects)
     elif choice == "4":
+        # Only display matches; searching must not modify saved projects.
+        search_term = input("Enter a project name or part of one to search: ").strip()
+        matching_projects = search_projects(projects, search_term)
+        if matching_projects:
+            show_projects(matching_projects)
+        else:
+            print("No matching projects found.")
+    elif choice == "5":
         save_projects(projects)
         print("Goodbye!")
         break
