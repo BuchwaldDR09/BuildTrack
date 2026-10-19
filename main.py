@@ -178,33 +178,40 @@ def search_projects(project_list, search_term):
     return [project for project in project_list if search_term in project.lower()]
 
 
-# Restore saved projects on startup instead of always creating an empty list.
-projects = load_projects()
+def main():
+    """Load saved projects and run BuildTrack's interactive menu."""
+    # Keeping startup inside main() prevents imports from launching the program.
+    projects = load_projects()
 
-# True is always true, so this loop repeats until break is reached.
-while True:
-    show_menu()
-    choice = input("Select an option: ")
+    # True is always true, so this loop repeats until break is reached.
+    while True:
+        show_menu()
+        choice = input("Select an option: ")
 
-    if choice == "1":
-        show_projects(projects)
-    elif choice == "2":
-        add_projects(projects)
-    elif choice == "3":
-        remove_projects(projects)
-    elif choice == "4":
-        # Only display matches; searching must not modify saved projects.
-        search_term = input("Enter a project name or part of one to search: ").strip()
-        matching_projects = search_projects(projects, search_term)
-        if matching_projects:
-            show_projects(matching_projects)
+        if choice == "1":
+            show_projects(projects)
+        elif choice == "2":
+            add_projects(projects)
+        elif choice == "3":
+            remove_projects(projects)
+        elif choice == "4":
+            # Only display matches; searching must not modify saved projects.
+            search_term = input("Enter a project name or part of one to search: ").strip()
+            matching_projects = search_projects(projects, search_term)
+            if matching_projects:
+                show_projects(matching_projects)
+            else:
+                print("No matching projects found.")
+        elif choice == "5":
+            rename_project(projects)
+        elif choice == "6":
+            save_projects(projects)
+            print("Goodbye!")
+            break
         else:
-            print("No matching projects found.")
-    elif choice == "5":
-        rename_project(projects)
-    elif choice == "6":
-        save_projects(projects)
-        print("Goodbye!")
-        break
-    else:
-        print("Invalid option.")
+            print("Invalid option.")
+
+    
+# Run the menu only when executed directly, not when imported for reuse/testing.
+if __name__ == "__main__":
+    main()
