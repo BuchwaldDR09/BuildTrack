@@ -55,6 +55,8 @@ def add_projects(project_list):
                 continue
 
             project_list.append(name)
+            # Keep the source list alphabetized (case-insensitive), not just the display.
+            project_list.sort(key=str.casefold)
             save_projects(project_list)  # Save immediately after a change.
             print(f"Project added: {name}")
             add_another = input("Would you like to enter another project? (yes/no): ").strip().lower()
@@ -93,6 +95,8 @@ def rename_project(project_list):
                     if confirmation == "yes":
                         # Direct index assignment replaces the name without changing list length.
                         project_list[project_index] = new_name
+                        # The renamed entry may belong somewhere else alphabetically.
+                        project_list.sort(key=str.casefold)
                         save_projects(project_list)  # Persist the renamed project immediately.
                         print(f"Project renamed: {old_name} -> {new_name}")
                     else:
@@ -129,7 +133,7 @@ def remove_projects(project_list):
 
 
 def load_projects(filename="projects.json"):
-    """Load saved projects, or start with an empty list if no file exists."""
+    """Load projects alphabetically, or start empty if no JSON file exists."""
     # Use the same folder and filename convention as save_projects().
     file_path = Path(__file__).resolve().parent / filename
 
@@ -137,7 +141,8 @@ def load_projects(filename="projects.json"):
     if file_path.exists():
         # Read mode ('r') does not overwrite the saved data.
         with open(file_path, "r", encoding="utf-8") as project_file:
-            return json.load(project_file)
+            # Normalize existing saved lists to alphabetical order at startup.
+            return sorted(json.load(project_file), key=str.casefold)
     else:
         return []
 
