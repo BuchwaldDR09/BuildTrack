@@ -41,6 +41,16 @@ def save_projects(project_list, filename="projects.json"):
         json.dump(project_list, project_file, indent=4)
 
 
+def project_name_exists(project_list, name, exclude_index=None):
+    """Check for a name match, ignoring case and optionally one project index."""
+    # enumerate supplies the index so renaming can skip the selected project.
+    # None (the default) matches no index, so adding compares against every name.
+    return any(
+        index != exclude_index and existing.casefold() == name.casefold()
+        for index, existing in enumerate(project_list)
+    )
+
+
 def add_projects(project_list):
     """Ask for project names and add each unique, non-empty name."""
     while True:
@@ -50,8 +60,8 @@ def add_projects(project_list):
         elif not name:
             print("Project name cannot be empty.")
         else:
-            # Compare folded text so capitalization alone cannot create a duplicate.
-            if any(existing.casefold() == name.casefold() for existing in project_list):
+            # Reuse the same validation rule as renaming, without excluding an index.
+            if project_name_exists(project_list, name):
                 print("Project already exists.")
                 continue
 
@@ -94,11 +104,8 @@ def rename_project(project_list):
                     if not new_name:
                         print("Project name cannot be empty.")
                         continue
-                    # Skip the selected project; changing only capitalization is allowed.
-                    if any(
-                        index != project_index and existing.casefold() == new_name.casefold()
-                        for index, existing in enumerate(project_list)
-                    ):
+                    # Exclude this project's own index so case-only renames are allowed.
+                    if project_name_exists(project_list, new_name, project_index):
                         print("Project already exists.")
                         continue
 
