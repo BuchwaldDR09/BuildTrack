@@ -89,8 +89,22 @@ def remove_projects(project_list):
                     print("Project was not removed.")
 
 
-# Projects are only in memory for now; Lesson 8C will load the JSON file.
-projects = []
+def load_projects(filename="projects.json"):
+    """Load saved projects, or start with an empty list if no file exists."""
+    # Use the same folder and filename convention as save_projects().
+    file_path = Path(__file__).resolve().parent / filename
+
+    # First run: there is no JSON file to load yet.
+    if file_path.exists():
+        # Read mode ('r') does not overwrite the saved data.
+        with open(file_path, "r", encoding="utf-8") as project_file:
+            return json.load(project_file)
+    else:
+        return []
+
+
+# Restore saved projects on startup instead of always creating an empty list.
+projects = load_projects()
 
 # True is always true, so this loop repeats until break is reached.
 while True:
