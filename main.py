@@ -11,7 +11,8 @@ def show_menu():
     print("2. Add Project")
     print("3. Remove Project")
     print("4. Search Projects")
-    print("5. Exit")
+    print("5. Rename Project")
+    print("6. Exit")
     print("")
 
 
@@ -59,6 +60,43 @@ def add_projects(project_list):
             add_another = input("Would you like to enter another project? (yes/no): ").strip().lower()
             if add_another != "yes":
                 break
+
+
+def rename_project(project_list):
+    """Rename a numbered project after confirmation."""
+    if not project_list:
+        print("No projects to rename.")
+    else:
+        print("Projects:")
+        for index, project in enumerate(project_list, start=1):
+            print(f"{index}. {project}")
+
+        selection = input("Enter the number of the project to rename: ").strip()
+        if not selection.isdigit():
+            print("Please enter a valid project number.")
+        else:
+            # Translate the displayed number (starting at 1) to a list index (starting at 0).
+            project_index = int(selection) - 1
+            if not 0 <= project_index < len(project_list):
+                print("Please enter a valid project number.")
+            else:
+                old_name = project_list[project_index]
+                new_name = input(f"Enter the new name for '{old_name}': ").strip()
+                if not new_name:
+                    print("Project name cannot be empty.")
+                elif new_name in project_list:
+                    print("Project already exists.")
+                else:
+                    confirmation = input(
+                        f"Are you sure you want to rename '{old_name}' to '{new_name}'? (yes/no): "
+                    ).strip().lower()
+                    if confirmation == "yes":
+                        # Direct index assignment replaces the name without changing list length.
+                        project_list[project_index] = new_name
+                        save_projects(project_list)  # Persist the renamed project immediately.
+                        print(f"Project renamed: {old_name} -> {new_name}")
+                    else:
+                        print("Project was not renamed.")
 
 
 def remove_projects(project_list):
@@ -138,6 +176,8 @@ while True:
         else:
             print("No matching projects found.")
     elif choice == "5":
+        rename_project(projects)
+    elif choice == "6":
         save_projects(projects)
         print("Goodbye!")
         break
