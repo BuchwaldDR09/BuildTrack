@@ -167,6 +167,9 @@ def load_projects(filename="projects.json"):
             # Normalize existing saved lists to alphabetical order at startup.
             return sorted(json.load(project_file), key=str.casefold)
     else:
+        # First launch: create an empty project store before showing the menu.
+        # Reuse save_projects() so loading and saving use the same file location.
+        save_projects([], filename=filename)
         return []
 
 
