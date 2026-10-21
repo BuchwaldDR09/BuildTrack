@@ -73,8 +73,8 @@ def add_projects(project_list):
             project_list.sort(key=str.casefold)
             save_projects(project_list)  # Save immediately after a change.
             print(f"Project added: {name}")
-            add_another = input("Would you like to enter another project? (yes/no): ").strip().lower()
-            if add_another != "yes":
+            add_another = input("Would you like to enter another project? (y/n): ").strip().lower()
+            if add_another not in {"y", "yes"}:
                 break
 
 
@@ -113,9 +113,9 @@ def rename_project(project_list):
                         continue
 
                     confirmation = input(
-                        f"Are you sure you want to rename '{old_name}' to '{new_name}'? (yes/no): "
+                        f"Are you sure you want to rename '{old_name}' to '{new_name}'? (y/n): "
                     ).strip().lower()
-                    if confirmation == "yes":
+                    if confirmation in {"y", "yes"}:
                         # Assignment updates the name without changing the list's length.
                         project_list[project_index] = new_name
                         project_list.sort(key=str.casefold)
@@ -145,9 +145,9 @@ def remove_projects(project_list):
             else:
                 project = project_list[project_index]
                 confirmation = input(
-                    f"Are you sure you want to remove '{project}'? (yes/no): "
+                    f"Are you sure you want to remove '{project}'? (y/n): "
                 ).strip().lower()
-                if confirmation == "yes":
+                if confirmation in {"y", "yes"}:
                     project_list.pop(project_index)
                     save_projects(project_list)  # Persist the deletion.
                     print(f"Project removed: {project}")
@@ -192,20 +192,17 @@ def main():
         choice = input("Select an option: ")
 
         if choice == "1":
-            # Show a read-only Pandas report without changing saved projects.
-            display_project_report()
+            # An optional search lets users display every project or a filtered report.
+            search_term = input("Search projects (leave blank to show all): ").strip()
+            display_project_report(search_term or None)
         elif choice == "2":
             add_projects(projects)
         elif choice == "3":
             remove_projects(projects)
         elif choice == "4":
-            # Only display matches; searching must not modify saved projects.
+            # Reuse the read-only Pandas report for case-insensitive searching.
             search_term = input("Enter a project name or part of one to search: ").strip()
-            matching_projects = search_projects(projects, search_term)
-            if matching_projects:
-                show_projects(matching_projects)
-            else:
-                print("No matching projects found.")
+            display_project_report(search_term)
         elif choice == "5":
             rename_project(projects)
         elif choice == "6":
