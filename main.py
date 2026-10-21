@@ -192,9 +192,10 @@ def main():
         choice = input("Select an option: ")
 
         if choice == "1":
-            # An optional search lets users display every project or a filtered report.
+            # Optional filters limit the report; blank CSV input disables export.
             search_term = input("Search projects (leave blank to show all): ").strip()
-            display_project_report(search_term or None)
+            csv_path = input("CSV filename (leave blank to skip export): ").strip()
+            display_project_report(search_term=search_term or None, csv_path=csv_path or None)
         elif choice == "2":
             add_projects(projects)
         elif choice == "3":
