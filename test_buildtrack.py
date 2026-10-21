@@ -1,9 +1,3 @@
-"""Regression tests for BuildTrack's project-management functions.
-
-Run with: python -m unittest -v test_buildtrack
-Mocks keep interactive inputs deterministic; temporary directories isolate real JSON I/O.
-"""
-
 import io
 import json
 import tempfile
@@ -11,10 +5,12 @@ import unittest
 from pathlib import Path
 from unittest.mock import mock_open, patch
 
-# main.py is the actual Python module. The alias provides a descriptive name.
 import main as BuildTrack
+import pandas as pd
+import project_report
 
 
+# Tests cover project search, validation, persistence, and menu behavior.
 class BuildTrackTests(unittest.TestCase):
     def test_search_projects_matches_partial_term_without_case(self):
         projects = ["Build Website", "Write report", "Website redesign"]
@@ -33,7 +29,6 @@ class BuildTrackTests(unittest.TestCase):
         self.assertFalse(BuildTrack.project_name_exists(projects, "ALPHA", 0))
         self.assertFalse(BuildTrack.project_name_exists(projects, "Gamma"))
 
-    # Patch where the function is defined (main), not the local import alias.
     @patch("main.save_projects")
     @patch("builtins.input", side_effect=["beta", "yes", "Alpha", "no"])
     def test_add_projects_sorts_names_alphabetically(self, mock_input, mock_save):
@@ -89,9 +84,34 @@ class BuildTrackTests(unittest.TestCase):
         self.assertEqual(projects, ["Apple", "banana", "zebra"])
         file_reader.assert_called_once()
 
+    def test_load_projects_creates_empty_json_file_when_missing(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            projects_path = Path(temp_dir) / "projects.json"
+            with patch.object(BuildTrack, "__file__", str(Path(temp_dir) / "main.py")):
+                projects = BuildTrack.load_projects()
+
+            self.assertEqual(projects, [])
+            self.assertTrue(projects_path.exists())
+            self.assertEqual(json.loads(projects_path.read_text(encoding="utf-8")), [])
+
+    def test_main_creates_projects_file_before_first_menu_input(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            projects_path = Path(temp_dir) / "projects.json"
+
+            def exit_after_checking_startup_file(prompt):
+                self.assertTrue(projects_path.exists())
+                self.assertEqual(json.loads(projects_path.read_text(encoding="utf-8")), [])
+                return "6"
+
+            with patch.object(BuildTrack, "__file__", str(Path(temp_dir) / "main.py")), \
+                 patch("builtins.input", side_effect=exit_after_checking_startup_file), \
+                 patch("sys.stdout", io.StringIO()):
+                BuildTrack.main()
+
+            self.assertEqual(json.loads(projects_path.read_text(encoding="utf-8")), [])
+
+    # Use a temporary directory to verify persistence without changing live data.
     def test_temp_directory_round_trip_saves_and_loads_projects(self):
-        """Exercise real JSON I/O without writing to the user's projects.json."""
-        # Saving preserves the input order; loading returns a sorted project list.
         saved_projects = [
             "Alpha",
             "Beta",
@@ -107,10 +127,8 @@ class BuildTrackTests(unittest.TestCase):
             "Gamma",
         ]
 
-        # The temporary directory is automatically removed after the test.
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_project_dir = Path(temp_dir)
-            # Point BuildTrack's __file__ into the temporary folder.
             with patch.object(BuildTrack, "__file__", str(temp_project_dir / "main.py")):
                 BuildTrack.save_projects(saved_projects, filename="projects.json")
                 reloaded_projects = BuildTrack.load_projects(filename="projects.json")
@@ -119,6 +137,27 @@ class BuildTrackTests(unittest.TestCase):
             self.assertEqual(len(reloaded_projects), 5)
             self.assertTrue((temp_project_dir / "projects.json").exists())
 
+    def test_project_report_exports_filtered_projects_from_temporary_data(self):
+        projects = ["Build Website", "Write report", "Website redesign"]
+        expected_projects = ["Build Website", "Website redesign"]
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_project_dir = Path(temp_dir)
+            projects_path = temp_project_dir / "projects.json"
+            csv_path = temp_project_dir / "filtered-projects.csv"
+            projects_path.write_text(json.dumps(projects), encoding="utf-8")
+            original_projects_data = projects_path.read_bytes()
+
+            with patch.object(BuildTrack, "__file__", str(temp_project_dir / "main.py")), \
+                 patch("sys.stdout", io.StringIO()):
+                project_report.display_project_report(search_term="site", csv_path=csv_path)
+
+            exported_projects = pd.read_csv(csv_path)["Project"].tolist()
+            self.assertEqual(projects_path.read_bytes(), original_projects_data)
+
+        self.assertEqual(exported_projects, expected_projects)
+
+    # Verify the app loads once and persists its list when the user exits.
     @patch("main.save_projects")
     @patch("main.load_projects", return_value=[])
     @patch("builtins.input", return_value="6")
@@ -133,5 +172,6 @@ class BuildTrackTests(unittest.TestCase):
         self.assertIn("Goodbye!", output.getvalue())
 
 
+# Support direct execution as well as unittest discovery.
 if __name__ == "__main__":
     unittest.main()
