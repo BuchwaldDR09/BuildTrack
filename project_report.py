@@ -1,33 +1,51 @@
-"""Read-only Pandas reporting for saved BuildTrack projects."""
+"""Read-only Pandas reports for BuildTrack's saved projects."""
 
 import importlib
 
 import pandas as pd
 
 
-def display_project_report():
-    """Display saved project names in a DataFrame with a total count."""
-    # Load the application module when the report is requested. This keeps
-    # main.py's import of this module from becoming a circular import at startup.
+def display_project_report(search_term=None):
+    """Display saved project names in a DataFrame with an optional case-insensitive filter."""
+    # Import on demand to avoid a circular import with main.py.
     app_module = importlib.import_module("main")
-    projects = app_module.load_projects()  # Reads JSON; does not save or edit it.
+    projects = app_module.load_projects()  # Reading does not change projects.json.
 
     if not projects:
         print("No projects saved.")
-        # Explicit columns give the empty report the same structure as full ones.
         empty_df = pd.DataFrame(columns=["Project"])
         print(empty_df)
         print(f"Total projects: {len(projects)}")
         return
 
-    # Each project name becomes one row under the "Project" column.
     project_df = pd.DataFrame({"Project": projects})
+
+    if search_term is not None and str(search_term).strip():
+        normalized_term = str(search_term).strip()
+        filtered_df = project_df[
+            project_df["Project"].astype(str).str.casefold().str.contains(
+                # regex=False treats punctuation like '.' and '[' literally.
+                normalized_term.casefold(), regex=False, na=False
+            )
+        ]
+
+        if filtered_df.empty:
+            print(f"No projects match the search term: '{normalized_term}'")
+            print(filtered_df)
+            print(f"Matching projects: {len(filtered_df)}")
+            return
+
+        print(f"Projects matching '{normalized_term}':")
+        print(filtered_df)
+        print(f"Matching projects: {len(filtered_df)}")
+        return
+
     print(project_df)
     print(f"Total projects: {len(project_df)}")
 
 
 def main():
-    """Run the project report on its own, outside BuildTrack's menu."""
+    """Run the project report."""
     display_project_report()
 
 
