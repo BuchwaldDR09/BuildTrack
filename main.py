@@ -3,6 +3,9 @@
 import json
 from pathlib import Path
 
+# Pandas reporting lives in its own module; JSON management remains here.
+from project_report import display_project_report
+
 
 def show_menu():
     """Display the main menu options."""
@@ -189,7 +192,8 @@ def main():
         choice = input("Select an option: ")
 
         if choice == "1":
-            show_projects(projects)
+            # Show a read-only Pandas report without changing saved projects.
+            display_project_report()
         elif choice == "2":
             add_projects(projects)
         elif choice == "3":
