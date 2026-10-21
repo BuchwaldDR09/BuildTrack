@@ -1,12 +1,14 @@
 """Regression tests for BuildTrack's project-management functions.
 
 Run with: python -m unittest -v test_buildtrack
-Mocks keep interactive inputs deterministic and avoid writing to real project data.
+Mocks keep interactive inputs deterministic; temporary directories isolate real JSON I/O.
 """
 
 import io
 import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import mock_open, patch
 
 # main.py is the actual Python module. The alias provides a descriptive name.
@@ -86,6 +88,36 @@ class BuildTrackTests(unittest.TestCase):
 
         self.assertEqual(projects, ["Apple", "banana", "zebra"])
         file_reader.assert_called_once()
+
+    def test_temp_directory_round_trip_saves_and_loads_projects(self):
+        """Exercise real JSON I/O without writing to the user's projects.json."""
+        # Saving preserves the input order; loading returns a sorted project list.
+        saved_projects = [
+            "Alpha",
+            "Beta",
+            "Gamma",
+            "Delta",
+            "Epsilon",
+        ]
+        expected_projects = [
+            "Alpha",
+            "Beta",
+            "Delta",
+            "Epsilon",
+            "Gamma",
+        ]
+
+        # The temporary directory is automatically removed after the test.
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_project_dir = Path(temp_dir)
+            # Point BuildTrack's __file__ into the temporary folder.
+            with patch.object(BuildTrack, "__file__", str(temp_project_dir / "main.py")):
+                BuildTrack.save_projects(saved_projects, filename="projects.json")
+                reloaded_projects = BuildTrack.load_projects(filename="projects.json")
+
+            self.assertEqual(reloaded_projects, expected_projects)
+            self.assertEqual(len(reloaded_projects), 5)
+            self.assertTrue((temp_project_dir / "projects.json").exists())
 
     @patch("main.save_projects")
     @patch("main.load_projects", return_value=[])
